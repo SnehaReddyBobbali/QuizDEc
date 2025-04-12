@@ -1,205 +1,237 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Share, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-const ResultScreen = ({ route }) => {
-  const navigation = useNavigation();
+const ResultScreen = ({ route, navigation }) => {
   const { score, total, timeTaken, answers, quizType } = route.params;
-  
   const percentage = Math.round((score / total) * 100);
   
-  const handleRetryQuiz = () => {
-    navigation.navigate('QuizScreen', { quizType });
-  };
-  
-  const handleShareResults = () => {
-    // Implement share functionality
-    console.log('Sharing results...');
-  };
-  
+  // Format time taken (seconds) to mm:ss format
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
-  
+
+  // Determine the color based on score percentage
+  const getScoreColor = () => {
+    if (percentage >= 80) return "#4CAF50"; // Green
+    if (percentage >= 60) return "#8BC34A"; // Light green
+    if (percentage >= 40) return "#FFC107"; // Amber
+    return "#F44336"; // Red
+  };
+
+  const getMedalImage = () => {
+    if (percentage >= 90) return "🏆";
+    if (percentage >= 70) return "🥈";
+    if (percentage >= 50) return "🥉";
+    return "🎯";
+  };
+
+  // Mock rank for demonstration purposes
+  const rank = 38;
+
+  // Share results function
+  const shareResults = async () => {
+    try {
+      const message = 
+      `${getMedalImage()} QuizDeck Results ${getMedalImage()}\n\n` +
+      `Quiz: ${quizType}\n` +
+      `Score: ${percentage}% (${score}/${total})\n` +
+      `Time: ${formatTime(timeTaken)}\n` +
+      `Rank: #${rank}\n\n` +
+      `Think you can beat me? Try QuizDeck now!`;
+
+      await Share.share({
+        message,
+        title: 'My Quiz Results'
+      });
+    } catch (error) {
+      console.error('Error sharing results:', error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.resultContainer}>
+      <View style={styles.card}>
         <View style={styles.header}>
-          <Text style={styles.title}>QuizDeck</Text>
+          <Text style={styles.headerTitle}>QuizDeck</Text>
         </View>
         
-        <ScrollView contentContainerStyle={styles.resultContent}>
-          <Text style={styles.completeText}>Quiz Complete!</Text>
-          
-          <View style={styles.scoreCircle}>
-            <Text style={styles.scoreText}>{percentage}%</Text>
+        <Text style={styles.title}>Quiz Complete!</Text>
+        
+        <View style={styles.scoreCircle}>
+          <View style={[styles.circleOutline, { borderColor: getScoreColor() }]}>
+            <Text style={[styles.scorePercentage, { color: getScoreColor() }]}>
+              {percentage}%
+            </Text>
+          </View>
+        </View>
+        
+        <Text style={styles.statsTitle}>Statistics</Text>
+        
+        <View style={styles.statsContainer}>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Correct Answers:</Text>
+            <Text style={styles.statValue}>{score}/{total}</Text>
           </View>
           
-          <View style={styles.statisticsContainer}>
-            <Text style={styles.statisticsHeader}>Statistics</Text>
-            <View style={styles.statisticsRow}>
-              <Text style={styles.statisticsLabel}>Correct Answers:</Text>
-              <Text style={styles.statisticsValue}>{score}/{total}</Text>
-            </View>
-            <View style={styles.statisticsRow}>
-              <Text style={styles.statisticsLabel}>Time Taken:</Text>
-              <Text style={styles.statisticsValue}>{formatTime(timeTaken)}</Text>
-            </View>
-            <View style={styles.statisticsRow}>
-              <Text style={styles.statisticsLabel}>New Rank:</Text>
-              <Text style={styles.statisticsValue}>{getRank(percentage)}</Text>
-            </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Time Taken:</Text>
+            <Text style={styles.statValue}>{formatTime(timeTaken)}</Text>
           </View>
           
-          <TouchableOpacity 
-            style={styles.reviewButton}
-            onPress={() => console.log('Review answers...')}
-          >
-            <Text style={styles.reviewButtonText}>Review Answers</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.retryButton}
-            onPress={handleRetryQuiz}
-          >
-            <Text style={styles.retryButtonText}>Retry Quiz</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.shareButton}
-            onPress={handleShareResults}
-          >
-            <Text style={styles.shareButtonText}>Share Results</Text>
-          </TouchableOpacity>
-        </ScrollView>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>New Rank:</Text>
+            <Text style={styles.statValue}>#{rank}</Text>
+          </View>
+        </View>
+        
+        <TouchableOpacity 
+          style={styles.reviewButton}
+          onPress={() => navigation.navigate('ReviewAnswers', { answers })}
+        >
+          <Text style={styles.buttonText}>Review Answers</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => navigation.navigate('QuizScreen', { quizType })}
+        >
+          <Text style={styles.retryButtonText}>Retry Quiz</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.shareButton}
+          onPress={shareResults}
+        >
+          <Ionicons name="share-social" size={18} color="white" style={styles.shareIcon} />
+          <Text style={styles.shareButtonText}>Share Results</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
-};
-
-// Function to determine rank based on score percentage
-const getRank = (percentage) => {
-  if (percentage >= 90) return 'Expert';
-  if (percentage >= 75) return 'Advanced';
-  if (percentage >= 60) return 'Intermediate';
-  if (percentage >= 40) return 'Beginner';
-  return 'Novice';
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    padding: 16,
   },
-  resultContainer: {
-    flex: 1,
+  card: {
     backgroundColor: 'white',
-    margin: 10,
-    borderRadius: 10,
+    borderRadius: 16,
     overflow: 'hidden',
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   header: {
-    backgroundColor: '#0099FF',
-    padding: 15,
+    backgroundColor: '#2196F3',
+    padding: 16,
     alignItems: 'center',
   },
-  title: {
+  headerTitle: {
     color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  resultContent: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  completeText: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#333',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 24,
   },
   scoreCircle: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  circleOutline: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    borderWidth: 5,
-    borderColor: '#4CAF50',
-    justifyContent: 'center',
+    borderWidth: 3,
     alignItems: 'center',
-    marginBottom: 25,
+    justifyContent: 'center',
   },
-  scoreText: {
-    fontSize: 28,
+  scorePercentage: {
+    fontSize: 36,
     fontWeight: 'bold',
-    color: '#4CAF50',
   },
-  statisticsContainer: {
-    width: '100%',
-    marginBottom: 25,
-  },
-  statisticsHeader: {
+  statsTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#555',
-    marginBottom: 10,
+    marginLeft: 20,
+    marginBottom: 8,
   },
-  statisticsRow: {
+  statsContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  statRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 8,
   },
-  statisticsLabel: {
-    color: '#555',
+  statLabel: {
+    fontSize: 16,
+    color: '#666',
   },
-  statisticsValue: {
+  statValue: {
+    fontSize: 16,
     fontWeight: '500',
-    color: '#333',
   },
   reviewButton: {
-    width: '100%',
-    backgroundColor: '#0099FF',
-    padding: 12,
-    borderRadius: 5,
+    backgroundColor: '#2196F3',
+    marginHorizontal: 20,
+    padding: 14,
+    borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 10,
-  },
-  reviewButtonText: {
-    color: 'white',
-    fontWeight: '500',
-    fontSize: 16,
+    marginBottom: 12,
   },
   retryButton: {
-    width: '100%',
-    backgroundColor: '#f0f0f0',
-    padding: 12,
-    borderRadius: 5,
+    backgroundColor: 'white',
+    marginHorizontal: 20,
+    padding: 14,
+    borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 10,
-  },
-  retryButtonText: {
-    color: '#555',
-    fontWeight: '500',
-    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    marginBottom: 12,
   },
   shareButton: {
-    width: '100%',
     backgroundColor: '#4CAF50',
-    padding: 12,
-    borderRadius: 5,
+    marginHorizontal: 20,
+    padding: 14,
+    borderRadius: 8,
     alignItems: 'center',
+    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  retryButtonText: {
+    color: '#333',  // Changed to dark color for better visibility
+    fontSize: 16,
+    fontWeight: '500',
   },
   shareButtonText: {
     color: 'white',
-    fontWeight: '500',
     fontSize: 16,
+    fontWeight: '500',
   },
+  shareIcon: {
+    marginRight: 8,
+  }
 });
 
 export default ResultScreen;

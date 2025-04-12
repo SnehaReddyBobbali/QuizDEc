@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const Categories = () => {
@@ -10,51 +10,70 @@ const Categories = () => {
     { id: 2, name: 'Mathematics', icon: '🔢', color: '#2196F3' },
     { id: 3, name: 'History', icon: '📜', color: '#FF9800' },
     { id: 4, name: 'Geography', icon: '🌍', color: '#9C27B0' },
-    { id: 5, name: 'Literature', icon: '📚', color: '#795548' },
-    { id: 6, name: 'Arts', icon: '🎨', color: '#F44336' },
+    { id: 7, name: 'Deep Learning', icon: '🧠', color: '#673AB7' },
+    { id: 8, name: 'Full Stack', icon: '💻', color: '#607D8B' },
+    { id: 9, name: 'AI Foundations', icon: '🤖', color: '#00BCD4' },
+    { id: 10, name: 'ML Fundamentals', icon: '📊', color: '#009688' },
+    { id: 11, name: 'Learning Models', icon: '🔍', color: '#E91E63' },
+    { id: 12, name: 'Data Science', icon: '📈', color: '#FFEB3B' },
   ];
-
+  
   const handleCategoryPress = (category) => {
-    if (category.name === 'Science') {
-      navigation.navigate('QuizScreen', { quizType: 'Science' });
+    if (category.name === 'Science' || 
+        category.name === 'Mathematics' || 
+        category.name === 'History' || 
+        category.name === 'Geography'
+        || category.name === 'Deep Learning'
+        || category.name === 'Full Stack'
+        || category.name === 'AI Foundations'
+        || category.name === 'ML Fundamentals'
+        || category.name === 'Learning Models'
+        || category.name === 'Data Science') {
+      navigation.navigate('CategoryQuizzesScreen', { category: category.name });
     } else {
-      // For future implementation
       alert(`${category.name} quiz coming soon!`);
     }
   };
-
+  // Instead of using FlatList, we'll use a ScrollView with manual grid layout
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={categories}
-        numColumns={2}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
+    <ScrollView 
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={true}
+    >
+      <View style={styles.gridContainer}>
+        {categories.map((item) => (
           <TouchableOpacity
+            key={item.id}
             style={[styles.categoryCard, { backgroundColor: item.color + '10' }]}
             onPress={() => handleCategoryPress(item)}
           >
             <Text style={styles.categoryIcon}>{item.icon}</Text>
             <Text style={styles.categoryName}>{item.name}</Text>
           </TouchableOpacity>
-        )}
-        contentContainerStyle={styles.listContainer}
-      />
-    </View>
+        ))}
+      </View>
+      {/* Add extra padding at the bottom to ensure last row is visible */}
+      <View style={styles.bottomPadding} />
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 10,
-    marginBottom: 20,
+    flex: 1,
   },
-  listContainer: {
-    paddingHorizontal: 5,
+  contentContainer: {
+    paddingHorizontal: 10,
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   categoryCard: {
-    flex: 1,
-    margin: 5,
+    width: '48%', // Just under 50% to account for spacing
+    marginVertical: 5,
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
@@ -69,6 +88,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
+  },
+  bottomPadding: {
+    height: 100, // Extra space at the bottom to ensure scrollability
   },
 });
 
